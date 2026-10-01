@@ -5,7 +5,6 @@ import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavOptions
 import androidx.navigation.compose.composable
-import androidx.navigation.toRoute
 import com.samdori93.yeoksadam.feature.voice.ui.VoiceRoute
 import kotlinx.serialization.Serializable
 
@@ -20,10 +19,8 @@ fun NavGraphBuilder.voiceScreen(
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    composable<Voice> { entry ->
-        val args = entry.toRoute<Voice>()
+    composable<Voice> {
         VoiceRoute(
-            figureId = args.figureId,
             onBack = onBack,
             modifier = modifier,
         )

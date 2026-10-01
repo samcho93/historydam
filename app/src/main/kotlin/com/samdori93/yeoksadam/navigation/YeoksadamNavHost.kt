@@ -37,6 +37,8 @@ import com.samdori93.yeoksadam.feature.notification.navigation.notificationScree
 import com.samdori93.yeoksadam.feature.profile.navigation.Profile
 import com.samdori93.yeoksadam.feature.profile.navigation.profileScreen
 import com.samdori93.yeoksadam.feature.profile.navigation.navigateToProfile
+import com.samdori93.yeoksadam.feature.voice.navigation.Voice
+import com.samdori93.yeoksadam.feature.ar.navigation.ArSearch
 import com.samdori93.yeoksadam.feature.voice.navigation.navigateToVoice
 import com.samdori93.yeoksadam.feature.voice.navigation.voiceScreen
 
@@ -55,12 +57,17 @@ fun YeoksadamAppRoot(
         currentDestination?.hierarchyHasTab(tab) == true
     } ?: TopLevelDestination.HOME
 
+    // 인물 대면 대화·AR 은 카메라 화면을 가득 쓴다 (하단 탭 숨김, 웹앱의 전체 화면 모드)
+    val immersive = currentDestination?.hierarchy?.any { it.hasRoute(Voice::class) || it.hasRoute(ArSearch::class) } == true
+
     Scaffold(
         bottomBar = {
-            YeoksadamBottomBar(
-                current = currentTab,
-                onSelect = { dest -> navController.navigateToTab(dest) },
-            )
+            if (!immersive) {
+                YeoksadamBottomBar(
+                    current = currentTab,
+                    onSelect = { dest -> navController.navigateToTab(dest) },
+                )
+            }
         },
     ) { padding ->
         NavHost(
@@ -75,12 +82,13 @@ fun YeoksadamAppRoot(
             )
             figureScreens(
                 onBack = { navController.popBackStack() },
-                onStartConversation = { navController.navigateToChat(it) },
+                // 인물과 마주 보는 AR 대화 (텍스트 대화는 Q&A 탭)
+                onStartConversation = { navController.navigateToVoice(it) },
                 onFigureClick = { navController.navigateToFigureSheet(it) },
             )
             mapScreen(
                 onEnterAr = { figureId, siteId -> navController.navigateToAr(figureId, siteId) },
-                onStartConversation = { navController.navigateToChat(it) },
+                onStartConversation = { navController.navigateToVoice(it) },
             )
             arScreen(
                 onStartConversation = { navController.navigateToChat(it) },
