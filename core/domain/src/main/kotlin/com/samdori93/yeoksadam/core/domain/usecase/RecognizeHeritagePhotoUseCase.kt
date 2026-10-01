@@ -49,8 +49,8 @@ class RecognizeHeritagePhotoUseCase @Inject constructor(
             name = official?.name ?: nearest.name,
             kind = official?.kind ?: nearest.kind,
             era = official?.era.orEmpty(),
-            description = "AI 이미지 인식을 사용할 수 없어, 현재 위치에서 가장 가까운 국가유산을 표시합니다. " +
-                "(local.properties 에 GEMINI_API_KEY 를 넣으면 사진 기반 인식이 켜집니다.)",
+            description = "AI 이미지 인식 서버에 연결하지 못해, 현재 위치에서 가장 가까운 국가유산을 표시합니다. " +
+                "네트워크를 확인한 뒤 다시 촬영해 보세요.",
             matchedHeritageId = nearest.id,
             confidence = 0,
         )
