@@ -28,7 +28,17 @@ object AppNotifications {
     /** 알림 게시. POST_NOTIFICATIONS 미허용 시 조용히 무시(크래시 없음). */
     fun post(context: Context, title: String, body: String) {
         ensureChannel(context)
+        // 알림을 누르면 앱을 연다
+        val open = context.packageManager.getLaunchIntentForPackage(context.packageName)?.let {
+            android.app.PendingIntent.getActivity(
+                context,
+                0,
+                it,
+                android.app.PendingIntent.FLAG_UPDATE_CURRENT or android.app.PendingIntent.FLAG_IMMUTABLE,
+            )
+        }
         val notification = NotificationCompat.Builder(context, CHANNEL_ID)
+            .setContentIntent(open)
             .setSmallIcon(android.R.drawable.ic_menu_mylocation)
             .setContentTitle(title)
             .setContentText(body)

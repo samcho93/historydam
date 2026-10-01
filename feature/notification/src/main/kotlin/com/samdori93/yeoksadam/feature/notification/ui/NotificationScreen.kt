@@ -54,20 +54,24 @@ fun NotificationScreen(
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
+    val viewModel: NotificationViewModel = androidx.hilt.navigation.compose.hiltViewModel()
+    val status by viewModel.status.collectAsStateWithLifecycle()
+    androidx.compose.runtime.LaunchedEffect(Unit) { NotificationStore.load(context) }
     val events by NotificationStore.events.collectAsStateWithLifecycle()
 
     val notifPermLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) {}
+    // 2단계: 「항상 허용」(앱이 닫혀 있어도 도착 알림) — Android 11+ 는 설정 화면으로 이동
+    val bgPermLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+        viewModel.enable(background = granted)
+    }
     val locPermLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions(),
     ) { result ->
-        if (result.values.any { it }) {
-            GeofenceManager.register(context) { ok ->
-                Toast.makeText(
-                    context,
-                    if (ok) "유적지 알림이 등록되었습니다." else "등록 실패(권한/위치 확인)",
-                    Toast.LENGTH_SHORT,
-                ).show()
-            }
+        when {
+            result.values.none { it } -> Toast.makeText(context, "위치 권한이 있어야 유적 도착을 알 수 있어요.", Toast.LENGTH_SHORT).show()
+            Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && !GeofenceManager.hasBackgroundPermission(context) ->
+                bgPermLauncher.launch(Manifest.permission.ACCESS_BACKGROUND_LOCATION)
+            else -> viewModel.enable(background = true)
         }
     }
 
@@ -90,7 +94,7 @@ fun NotificationScreen(
         // 액션 버튼
         Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
             ActionButton(
-                label = "주변 유적지 알림 등록",
+                label = "유적 도착 알림 켜기",
                 solid = true,
                 modifier = Modifier.weight(1f),
                 onClick = {
@@ -110,12 +114,16 @@ fun NotificationScreen(
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                         notifPermLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
                     }
-                    val title = "유적지 도착"
-                    val body = "수원화성에 도착했습니다. 역사 인물을 만나보세요."
+                    val title = "수원 화성에 도착했습니다"
+                    val body = "정조를 만날 수 있어요. 앱을 열어 대화해 보세요."
                     AppNotifications.post(context, title, body)
-                    NotificationStore.add(NotificationStore.Event(title, body, System.currentTimeMillis()))
+                    NotificationStore.add(context, NotificationStore.Event(title, body, System.currentTimeMillis()))
                 },
             )
+        }
+
+        status?.let {
+            Text(it, fontSize = 12.sp, color = DancheongColors.CheongnokDeep, modifier = Modifier.padding(top = 10.dp))
         }
 
         Spacer(Modifier.height(16.dp))

@@ -49,7 +49,22 @@ import com.samdori93.yeoksadam.feature.voice.navigation.voiceScreen
 @Composable
 fun YeoksadamAppRoot(
     navController: NavHostController = rememberNavController(),
+    onLocationGranted: () -> Unit = {},
 ) {
+    // 처음 열 때 위치(내 주변 인물·유적)와 알림 권한을 묻는다
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val permissionLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
+        androidx.activity.result.contract.ActivityResultContracts.RequestMultiplePermissions(),
+    ) { result -> if (result[android.Manifest.permission.ACCESS_FINE_LOCATION] == true || result[android.Manifest.permission.ACCESS_COARSE_LOCATION] == true) onLocationGranted() }
+    androidx.compose.runtime.LaunchedEffect(Unit) {
+        val needed = buildList {
+            add(android.Manifest.permission.ACCESS_FINE_LOCATION)
+            add(android.Manifest.permission.ACCESS_COARSE_LOCATION)
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) add(android.Manifest.permission.POST_NOTIFICATIONS)
+        }.filter { androidx.core.content.ContextCompat.checkSelfPermission(context, it) != android.content.pm.PackageManager.PERMISSION_GRANTED }
+        if (needed.isNotEmpty()) permissionLauncher.launch(needed.toTypedArray())
+    }
+
     val backStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = backStackEntry?.destination
 
