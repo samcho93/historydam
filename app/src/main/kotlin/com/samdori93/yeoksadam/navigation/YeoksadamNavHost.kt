@@ -80,6 +80,7 @@ fun YeoksadamAppRoot(
             )
             mapScreen(
                 onEnterAr = { figureId, siteId -> navController.navigateToAr(figureId, siteId) },
+                onStartConversation = { navController.navigateToChat(it) },
             )
             arScreen(
                 onStartConversation = { navController.navigateToChat(it) },

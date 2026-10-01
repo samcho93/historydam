@@ -24,5 +24,6 @@ fun ChatRoute(
         onBack = onBack,
         onSwitchToVoice = onSwitchToVoice,
         modifier = modifier,
+        onReset = viewModel::onReset,
     )
 }

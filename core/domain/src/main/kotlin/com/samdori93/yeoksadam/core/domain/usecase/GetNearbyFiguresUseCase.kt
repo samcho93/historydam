@@ -26,6 +26,7 @@ class GetNearbyFiguresUseCase @Inject constructor(
         }
 
     companion object {
-        const val DEFAULT_RADIUS_M = 5_000
+        /** 인물은 16명이 경기도 곳곳에 있어, 거리와 관계없이 가까운 순으로 모두 보여 준다(웹앱과 같음). */
+        const val DEFAULT_RADIUS_M = 300_000
     }
 }

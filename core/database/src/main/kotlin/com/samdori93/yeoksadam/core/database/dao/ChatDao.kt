@@ -17,4 +17,17 @@ interface ChatDao {
 
     @Query("DELETE FROM chat_messages WHERE figureId = :figureId")
     suspend fun clearHistory(figureId: String)
+
+    @Query("DELETE FROM chat_messages")
+    suspend fun clearAll()
+
+    /** 서버에 보낼 최근 대화 (최신 limit 개를 오래된 순으로) */
+    @Query(
+        "SELECT * FROM (SELECT * FROM chat_messages WHERE figureId = :figureId " +
+            "ORDER BY timestamp DESC, id DESC LIMIT :limit) ORDER BY timestamp ASC, id ASC",
+    )
+    suspend fun recent(figureId: String, limit: Int): List<ChatMessageEntity>
+
+    @Query("SELECT COUNT(DISTINCT figureId) FROM chat_messages")
+    fun roomCount(): Flow<Int>
 }

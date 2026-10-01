@@ -1,6 +1,8 @@
 package com.samdori93.yeoksadam.feature.figure.navigation
 
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
@@ -10,6 +12,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.toRoute
 import com.samdori93.yeoksadam.feature.figure.ui.AllFiguresScreen
 import com.samdori93.yeoksadam.feature.figure.ui.FigureSheetScreen
+import com.samdori93.yeoksadam.feature.figure.viewmodel.AllFiguresViewModel
 import com.samdori93.yeoksadam.feature.figure.viewmodel.FigureSheetViewModel
 import kotlinx.serialization.Serializable
 
@@ -37,8 +40,10 @@ fun NavGraphBuilder.figureScreens(
         val args = entry.toRoute<FigureSheet>()
         val viewModel: FigureSheetViewModel = hiltViewModel()
         LaunchedEffect(args.figureId) { viewModel.onFigureShown(args.figureId) }
+        val nearby by viewModel.figure.collectAsStateWithLifecycle()
         FigureSheetScreen(
             figureId = args.figureId,
+            nearby = nearby,
             onBack = onBack,
             onRelatedSites = { /* TODO: 관련 유적지 화면 */ },
             onStartConversation = onStartConversation,
@@ -46,7 +51,10 @@ fun NavGraphBuilder.figureScreens(
         )
     }
     composable<AllFigures> {
+        val viewModel: AllFiguresViewModel = hiltViewModel()
+        val state by viewModel.uiState.collectAsStateWithLifecycle()
         AllFiguresScreen(
+            state = state,
             onBack = onBack,
             onFigureClick = onFigureClick,
             modifier = modifier,

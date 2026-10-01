@@ -1,115 +1,132 @@
 package com.samdori93.yeoksadam.feature.chat.ui
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.*
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.samdori93.yeoksadam.core.ui.sample.SampleData
-import com.samdori93.yeoksadam.core.ui.sample.SampleFigure
+import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewModelScope
+import com.samdori93.yeoksadam.core.designsystem.component.MedallionPortrait
+import com.samdori93.yeoksadam.core.designsystem.theme.DancheongColors
+import com.samdori93.yeoksadam.core.designsystem.theme.NanumMyeongjo
+import com.samdori93.yeoksadam.core.domain.model.NearbyFigure
+import com.samdori93.yeoksadam.core.domain.usecase.GetAllFiguresUseCase
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-@Composable
-fun ChatListRoute(
-    onFigureClick: (String) -> Unit,
-    modifier: Modifier = Modifier
-) {
-    ChatListScreen(
-        figures = SampleData.figures,
-        onFigureClick = onFigureClick,
-        modifier = modifier
-    )
-}
+/** Q&A — 대화할 인물 목록 (가까운 순). */
+@HiltViewModel
+class ChatListViewModel @Inject constructor(
+    getAllFigures: GetAllFiguresUseCase,
+) : ViewModel() {
+    private val _figures = MutableStateFlow<List<NearbyFigure>?>(null)
+    val figures: StateFlow<List<NearbyFigure>?> = _figures.asStateFlow()
 
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun ChatListScreen(
-    figures: List<SampleFigure>,
-    onFigureClick: (String) -> Unit,
-    modifier: Modifier = Modifier
-) {
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("역사 인물 Q&A") }
-            )
-        },
-        modifier = modifier
-    ) { innerPadding ->
-        LazyColumn(
-            contentPadding = innerPadding,
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 16.dp, vertical = 8.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            items(figures, key = { it.id }) { figure ->
-                FigureItemCard(
-                    figure = figure,
-                    onClick = { onFigureClick(figure.id) }
-                )
-            }
-        }
+    init {
+        viewModelScope.launch { _figures.value = getAllFigures().sortedBy { it.distanceM } }
     }
 }
 
 @Composable
-private fun FigureItemCard(
-    figure: SampleFigure,
-    onClick: () -> Unit
+fun ChatListRoute(
+    onFigureClick: (String) -> Unit,
+    modifier: Modifier = Modifier,
+    viewModel: ChatListViewModel = hiltViewModel(),
 ) {
-    Card(
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant
-        ),
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick)
+    val figures by viewModel.figures.collectAsStateWithLifecycle()
+    ChatListScreen(figures = figures, onFigureClick = onFigureClick, modifier = modifier)
+}
+
+@Composable
+fun ChatListScreen(
+    figures: List<NearbyFigure>?,
+    onFigureClick: (String) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .background(DancheongColors.Hanji)
+            .statusBarsPadding(),
     ) {
-        Row(
-            modifier = Modifier
-                .padding(16.dp)
-                .fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically
+        Text(
+            "역사 인물 Q&A",
+            modifier = Modifier.fillMaxWidth().padding(top = 14.dp),
+            fontFamily = NanumMyeongjo,
+            fontWeight = FontWeight.Bold,
+            fontSize = 17.sp,
+            color = DancheongColors.Meok,
+            textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+        )
+        Text(
+            "대화할 인물을 고르세요. 가까운 인물부터 보여 드립니다.",
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+            fontSize = 12.sp,
+            color = DancheongColors.MeokSoft,
+        )
+        if (figures == null) {
+            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                CircularProgressIndicator(color = DancheongColors.Jujak)
+            }
+            return@Column
+        }
+        LazyColumn(
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 16.dp, vertical = 4.dp),
+            verticalArrangement = Arrangement.spacedBy(4.dp),
         ) {
-            Surface(
-                shape = RoundedCornerShape(50),
-                color = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.size(48.dp)
-            ) {
-                Box(contentAlignment = Alignment.Center) {
+            items(figures, key = { it.figure.id }) { nf ->
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { onFigureClick(nf.figure.id) }
+                        .padding(vertical = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    MedallionPortrait(
+                        portraitUrl = nf.figure.portraitUrl.ifBlank { null },
+                        name = nf.figure.name,
+                        sealMark = nf.figure.seal.ifBlank { null },
+                        size = 48.dp,
+                    )
+                    Spacer(Modifier.width(14.dp))
+                    Column(Modifier.weight(1f)) {
+                        Text(nf.figure.name, fontFamily = NanumMyeongjo, fontWeight = FontWeight.Bold, fontSize = 16.sp, color = DancheongColors.Meok)
+                        Text("${nf.figure.title} · ${nf.site.name}", fontSize = 12.sp, color = DancheongColors.MeokSoft, maxLines = 1)
+                    }
                     Text(
-                        text = figure.initial.toString(),
-                        color = MaterialTheme.colorScheme.onPrimary,
-                        style = MaterialTheme.typography.titleMedium
+                        if (nf.distanceM >= 1000) "%.0fkm".format(nf.distanceM / 1000) else "${nf.distanceM.toInt()}m",
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = DancheongColors.CheongnokDeep,
                     )
                 }
             }
-
-            Spacer(modifier = Modifier.width(16.dp))
-
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = figure.name,
-                    style = MaterialTheme.typography.titleMedium
-                )
-                Text(
-                    text = figure.title,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-
-            Text(
-                text = if (figure.discovered) "대화 가능" else figure.distanceLabel,
-                style = MaterialTheme.typography.labelSmall,
-                color = if (figure.discovered) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline
-            )
         }
     }
 }

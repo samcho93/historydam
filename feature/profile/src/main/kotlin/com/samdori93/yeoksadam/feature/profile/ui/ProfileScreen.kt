@@ -142,6 +142,10 @@ private fun ProfileContent(
             }
         }
 
+        // 설정 (대화 방식 · 지식 경계 · 대화 기록)
+        SettingsCard()
+        Spacer(Modifier.size(14.dp))
+
         // 역사의 전당
         Row(
             modifier = Modifier.padding(horizontal = 16.dp),

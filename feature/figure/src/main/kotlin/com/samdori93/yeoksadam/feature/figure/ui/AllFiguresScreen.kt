@@ -37,16 +37,28 @@ import com.samdori93.yeoksadam.core.designsystem.component.MedallionPortrait
 import com.samdori93.yeoksadam.core.designsystem.theme.DancheongColors
 import com.samdori93.yeoksadam.core.designsystem.theme.NanumMyeongjo
 import com.samdori93.yeoksadam.core.designsystem.theme.YeoksadamTheme
-import com.samdori93.yeoksadam.core.ui.sample.SampleData
-import com.samdori93.yeoksadam.core.ui.sample.SampleFigure
+import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.text.TextStyle
+import com.samdori93.yeoksadam.core.domain.model.NearbyFigure
+import com.samdori93.yeoksadam.feature.figure.viewmodel.AllFiguresUiState
 
 /** 모든 인물 (목업 7번) — 필터·검색·세그먼트·가나다 인덱스 리스트. */
 @Composable
 fun AllFiguresScreen(
+    state: AllFiguresUiState,
     onBack: () -> Unit,
     onFigureClick: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    var byDistance by rememberSaveable { mutableStateOf(false) }
+    var query by rememberSaveable { mutableStateOf("") }
+    val shown = state.figures
+        .filter { query.isBlank() || it.figure.name.contains(query.trim()) || it.site.name.contains(query.trim()) }
+        .let { list -> if (byDistance) list.sortedBy { it.distanceM } else list.sortedBy { it.figure.name } }
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -103,7 +115,16 @@ fun AllFiguresScreen(
                 horizontalArrangement = Arrangement.spacedBy(6.dp),
             ) {
                 Icon(Icons.Filled.Search, null, tint = DancheongColors.MeokSoft, modifier = Modifier.size(15.dp))
-                Text("인물 검색", color = DancheongColors.MeokSoft, fontSize = 13.sp)
+                Box(Modifier.weight(1f)) {
+                    if (query.isEmpty()) Text("인물·유적 검색", color = DancheongColors.MeokSoft, fontSize = 13.sp)
+                    BasicTextField(
+                        value = query,
+                        onValueChange = { query = it },
+                        singleLine = true,
+                        textStyle = TextStyle(fontSize = 13.sp, color = DancheongColors.Meok),
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                }
             }
         }
 
@@ -117,8 +138,8 @@ fun AllFiguresScreen(
                 .padding(4.dp),
             horizontalArrangement = Arrangement.spacedBy(4.dp),
         ) {
-            Segment("가나다순", true)
-            Segment("주변 인물", false)
+            Segment("가나다순", !byDistance) { byDistance = false }
+            Segment("주변 인물", byDistance) { byDistance = true }
         }
 
         Spacer(Modifier.height(8.dp))
@@ -128,18 +149,19 @@ fun AllFiguresScreen(
             modifier = Modifier.fillMaxSize(),
             contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 16.dp, vertical = 4.dp),
         ) {
-            items(SampleData.figures, key = { it.id }) { fig ->
-                FigureRow(fig, onClick = { onFigureClick(fig.id) })
+            items(shown, key = { it.figure.id }) { nf ->
+                FigureRow(nf, discovered = nf.figure.id in state.discovered, onClick = { onFigureClick(nf.figure.id) })
             }
         }
     }
 }
 
 @Composable
-private fun Segment(label: String, on: Boolean) {
+private fun Segment(label: String, on: Boolean, onClick: () -> Unit) {
     Box(
         modifier = Modifier
             .background(if (on) DancheongColors.HanjiCard else Color.Transparent, RoundedCornerShape(9.dp))
+            .clickable(onClick = onClick)
             .padding(horizontal = 18.dp, vertical = 7.dp),
     ) {
         Text(
@@ -152,7 +174,8 @@ private fun Segment(label: String, on: Boolean) {
 }
 
 @Composable
-private fun FigureRow(fig: SampleFigure, onClick: () -> Unit) {
+private fun FigureRow(nf: NearbyFigure, discovered: Boolean, onClick: () -> Unit) {
+    val fig = nf.figure
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -160,21 +183,21 @@ private fun FigureRow(fig: SampleFigure, onClick: () -> Unit) {
             .padding(vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        if (fig.discovered) {
-            MedallionPortrait(portraitUrl = null, name = fig.name, size = 52.dp)
+        if (discovered) {
+            MedallionPortrait(portraitUrl = fig.portraitUrl.ifBlank { null }, name = fig.name, sealMark = fig.seal.ifBlank { null }, size = 52.dp)
         } else {
-            LockedMedallion(size = 52.dp, label = fig.initial.toString())
+            LockedMedallion(size = 52.dp, label = fig.name.take(1))
         }
         Spacer(Modifier.width(14.dp))
         Column(Modifier.weight(1f)) {
             Text(fig.name, fontFamily = NanumMyeongjo, fontWeight = FontWeight.Bold, fontSize = 16.sp, color = DancheongColors.Meok)
-            Text(fig.title, fontSize = 12.sp, color = DancheongColors.MeokSoft)
+            Text("${fig.title} · ${nf.site.name}", fontSize = 12.sp, color = DancheongColors.MeokSoft, maxLines = 1)
         }
         Text(
-            fig.distanceLabel,
+            if (discovered) formatDistance(nf.distanceM) else "미발견 · ${formatDistance(nf.distanceM)}",
             fontSize = 12.sp,
             fontWeight = FontWeight.SemiBold,
-            color = if (fig.discovered) DancheongColors.CheongnokDeep else DancheongColors.MeokSoft.copy(alpha = 0.6f),
+            color = if (discovered) DancheongColors.CheongnokDeep else DancheongColors.MeokSoft.copy(alpha = 0.6f),
         )
     }
 }
@@ -196,6 +219,6 @@ private fun IconChip(icon: androidx.compose.ui.graphics.vector.ImageVector, cd: 
 @Composable
 private fun AllFiguresPreview() {
     YeoksadamTheme {
-        AllFiguresScreen({}, {})
+        AllFiguresScreen(AllFiguresUiState(loading = false), {}, {})
     }
 }

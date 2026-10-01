@@ -33,18 +33,21 @@ import com.samdori93.yeoksadam.core.designsystem.component.MedallionPortrait
 import com.samdori93.yeoksadam.core.designsystem.theme.DancheongColors
 import com.samdori93.yeoksadam.core.designsystem.theme.NanumMyeongjo
 import com.samdori93.yeoksadam.core.designsystem.theme.YeoksadamTheme
-import com.samdori93.yeoksadam.core.ui.sample.SampleData
+import androidx.compose.ui.text.style.TextAlign
+import com.samdori93.yeoksadam.core.domain.model.NearbyFigure
 
 /** 인물 선택 시트 (목업 2번) — 배경 딤 + 초상 + [관련 유적지 / 대화하기]. */
 @Composable
 fun FigureSheetScreen(
     figureId: String,
+    nearby: NearbyFigure?,
     onBack: () -> Unit,
     onRelatedSites: (String) -> Unit,
     onStartConversation: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val figure = SampleData.figure(figureId)
+    val figure = nearby?.figure
+    val name = figure?.name ?: "…"
     Box(
         modifier = modifier
             .fillMaxSize()
@@ -57,15 +60,28 @@ fun FigureSheetScreen(
             modifier = Modifier.padding(horizontal = 32.dp),
         ) {
             MedallionPortrait(
-                portraitUrl = null,
-                name = figure.name,
-                sealMark = figure.initial.toString(),
+                portraitUrl = figure?.portraitUrl?.ifBlank { null },
+                name = name,
+                sealMark = figure?.seal?.ifBlank { null } ?: name.take(1),
                 size = 150.dp,
                 selected = true,
             )
             Spacer(Modifier.height(18.dp))
-            Text(figure.name, fontFamily = NanumMyeongjo, fontWeight = FontWeight.Bold, fontSize = 24.sp, color = DancheongColors.Baek)
-            Text("${figure.site} · ${figure.distanceLabel}", fontSize = 13.sp, color = DancheongColors.HanjiDim)
+            Text(name, fontFamily = NanumMyeongjo, fontWeight = FontWeight.Bold, fontSize = 24.sp, color = DancheongColors.Baek)
+            if (figure != null) {
+                Text("${figure.title} · ${figure.years}", fontSize = 13.sp, color = DancheongColors.HanjiDim)
+                Text("${nearby.site.name} · ${formatDistance(nearby.distanceM)}", fontSize = 13.sp, color = DancheongColors.HwangtoLight)
+                if (figure.bio.isNotBlank()) {
+                    Spacer(Modifier.height(10.dp))
+                    Text(
+                        figure.bio,
+                        fontSize = 13.sp,
+                        lineHeight = 19.sp,
+                        color = DancheongColors.Baek.copy(alpha = 0.85f),
+                        textAlign = TextAlign.Center,
+                    )
+                }
+            }
 
             Spacer(Modifier.height(28.dp))
             SheetPill(
@@ -121,10 +137,13 @@ private fun SheetPill(icon: ImageVector, label: String, solid: Boolean, onClick:
     }
 }
 
+/** 1.2km · 350m */
+internal fun formatDistance(m: Float): String = if (m >= 1000) "%.1fkm".format(m / 1000) else "${m.toInt()}m"
+
 @Preview
 @Composable
 private fun FigureSheetPreview() {
     YeoksadamTheme {
-        FigureSheetScreen("fig_chae", {}, {}, {})
+        FigureSheetScreen("chae-jegong", null, {}, {}, {})
     }
 }

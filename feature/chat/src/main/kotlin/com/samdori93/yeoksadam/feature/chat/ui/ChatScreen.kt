@@ -49,7 +49,6 @@ import com.samdori93.yeoksadam.core.designsystem.theme.NanumMyeongjo
 import com.samdori93.yeoksadam.core.designsystem.theme.YeoksadamTheme
 import com.samdori93.yeoksadam.core.domain.model.ChatMessage
 import com.samdori93.yeoksadam.core.domain.model.Role
-import com.samdori93.yeoksadam.core.ui.sample.SampleData
 import com.samdori93.yeoksadam.feature.chat.viewmodel.ChatUiState
 
 /** 챗봇 텍스트 대화 (실제 AI 및 RAG 연동) */
@@ -62,8 +61,10 @@ fun ChatScreen(
     onBack: () -> Unit,
     onSwitchToVoice: (String) -> Unit,
     modifier: Modifier = Modifier,
+    onReset: () -> Unit = {},
 ) {
-    val figure = SampleData.figure(figureId)
+    val figure = state.figure?.figure
+    val name = figure?.name ?: "…"
     val listState = rememberLazyListState()
     LaunchedEffect(state.messages.size) {
         if (state.messages.isNotEmpty()) listState.animateScrollToItem(state.messages.lastIndex)
@@ -87,14 +88,44 @@ fun ChatScreen(
                 modifier = Modifier.size(30.dp).clickable(onClick = onBack),
             )
             Spacer(Modifier.width(8.dp))
-            MedallionPortrait(portraitUrl = null, name = figure.name, size = 38.dp)
+            MedallionPortrait(
+                portraitUrl = figure?.portraitUrl?.ifBlank { null },
+                name = name,
+                sealMark = figure?.seal?.ifBlank { null },
+                size = 38.dp,
+            )
             Spacer(Modifier.width(10.dp))
-            Column {
-                Text(figure.name, fontFamily = NanumMyeongjo, fontWeight = FontWeight.Bold, fontSize = 16.sp, color = DancheongColors.Meok)
+            Column(Modifier.weight(1f)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(name, fontFamily = NanumMyeongjo, fontWeight = FontWeight.Bold, fontSize = 16.sp, color = DancheongColors.Meok)
+                    state.modeBadge?.let { badge ->
+                        Spacer(Modifier.width(6.dp))
+                        Text(
+                            badge,
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White,
+                            modifier = Modifier
+                                .background(DancheongColors.Cheongnok, RoundedCornerShape(6.dp))
+                                .padding(horizontal = 6.dp, vertical = 1.dp),
+                        )
+                    }
+                }
                 Text(
-                    if (state.responding) "● 입력 중…" else "● 대화 중 · ${figure.title}",
+                    if (state.responding) "● 답을 생각하는 중…" else "● 대화 중 · ${figure?.title.orEmpty()}",
                     fontSize = 11.sp,
                     color = DancheongColors.Cheongnok,
+                )
+            }
+            if (state.messages.size > 1) {
+                Text(
+                    "새로 시작",
+                    fontSize = 12.sp,
+                    color = DancheongColors.Jujak,
+                    modifier = Modifier
+                        .border(1.dp, DancheongColors.Jujak.copy(alpha = 0.5f), RoundedCornerShape(12.dp))
+                        .clickable(onClick = onReset)
+                        .padding(horizontal = 10.dp, vertical = 4.dp),
                 )
             }
         }
@@ -122,6 +153,13 @@ fun ChatScreen(
             if (state.responding) {
                 item {
                     Bubble(message = ChatMessage(role = Role.FIGURE, text = "…"), them = true)
+                }
+            }
+            state.notice?.let { notice ->
+                item {
+                    Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                        Text(notice, fontSize = 12.sp, color = DancheongColors.Jujak)
+                    }
                 }
             }
         }
@@ -224,14 +262,15 @@ private fun Bubble(message: ChatMessage, them: Boolean) {
                     thickness = 0.5.dp
                 )
                 Spacer(Modifier.height(4.dp))
-                message.citations.forEach { citation ->
-                    Text(
-                        text = "📜 [사료] ${citation.source}: \"${citation.excerpt}\"",
-                        fontSize = 11.sp,
-                        color = if (them) DancheongColors.MeokSoft else Color.White.copy(alpha = 0.85f),
-                        lineHeight = 15.sp
-                    )
-                }
+                // RAG 서버: 답변이 실제로 인용한 유적 / 외부 RAG: 참고 문장
+                Text(
+                    text = "📚 근거  " + message.citations.joinToString("  ·  ") { c ->
+                        if (c.refId != null) c.source else "\"${c.excerpt}\""
+                    },
+                    fontSize = 11.sp,
+                    color = if (them) DancheongColors.CheongnokDeep else Color.White.copy(alpha = 0.85f),
+                    lineHeight = 15.sp,
+                )
             }
         }
     }
@@ -242,7 +281,7 @@ private fun Bubble(message: ChatMessage, them: Boolean) {
 private fun ChatPreview() {
     YeoksadamTheme {
         ChatScreen(
-            figureId = "fig_chae",
+            figureId = "chae-jegong",
             state = ChatUiState(
                 messages = listOf(
                     ChatMessage(role = Role.FIGURE, text = "어서 오시게."),

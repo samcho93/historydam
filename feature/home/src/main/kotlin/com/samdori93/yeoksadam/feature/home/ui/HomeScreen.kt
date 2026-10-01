@@ -161,7 +161,7 @@ private fun NearbyContent(
             MedallionPortrait(
                 portraitUrl = selected.figure.portraitUrl.ifBlank { null },
                 name = selected.figure.name,
-                sealMark = selected.figure.name.take(1),
+                sealMark = selected.figure.seal.ifBlank { selected.figure.name.take(1) },
                 size = 170.dp,
                 selected = true,
                 modifier = Modifier

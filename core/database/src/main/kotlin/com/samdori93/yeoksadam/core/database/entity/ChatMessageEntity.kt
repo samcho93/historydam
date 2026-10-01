@@ -10,5 +10,7 @@ data class ChatMessageEntity(
     val figureId: String,
     val role: String, // "USER" 또는 "FIGURE"
     val text: String,
+    /** RAG 근거 (JSON 배열 [{source, excerpt, refId}]) */
+    val citationsJson: String = "",
     val timestamp: Long = System.currentTimeMillis()
 )

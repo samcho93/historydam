@@ -60,7 +60,7 @@ class LocationRepositoryImpl @Inject constructor(
         const val UPDATE_INTERVAL_MS = 10_000L
         const val MIN_UPDATE_INTERVAL_MS = 5_000L
 
-        /** 경복궁 — 측위 불가 시 데모 기본 위치. */
-        val DEFAULT_LOCATION = LatLng(37.579617, 126.977041)
+        /** 수원 화성행궁 — 측위 불가 시 데모 기본 위치 (시범 지역 경기도, 웹앱과 같음). */
+        val DEFAULT_LOCATION = LatLng(37.2818, 127.0137)
     }
 }

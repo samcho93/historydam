@@ -9,7 +9,7 @@ import com.samdori93.yeoksadam.core.database.entity.FigureEntity
 
 @Database(
     entities = [FigureEntity::class, ChatMessageEntity::class],
-    version = 1,
+    version = 2,
     exportSchema = false,
 )
 abstract class YeoksadamDatabase : RoomDatabase() {
