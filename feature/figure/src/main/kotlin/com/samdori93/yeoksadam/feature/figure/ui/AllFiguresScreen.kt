@@ -184,7 +184,7 @@ private fun FigureRow(nf: NearbyFigure, discovered: Boolean, onClick: () -> Unit
         verticalAlignment = Alignment.CenterVertically,
     ) {
         if (discovered) {
-            MedallionPortrait(portraitUrl = fig.portraitUrl.ifBlank { null }, name = fig.name, sealMark = fig.seal.ifBlank { null }, size = 52.dp)
+            MedallionPortrait(portraitUrl = fig.portraitUrl.ifBlank { null }, name = fig.name, sealMark = null, size = 52.dp)
         } else {
             LockedMedallion(size = 52.dp, label = fig.name.take(1))
         }

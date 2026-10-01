@@ -61,6 +61,7 @@ import com.naver.maps.map.compose.NaverMap
 import com.naver.maps.map.compose.rememberCameraPositionState
 import com.naver.maps.map.compose.rememberFusedLocationSource
 import com.naver.maps.map.compose.rememberMarkerState
+import com.naver.maps.map.util.MarkerIcons
 import com.samdori93.yeoksadam.core.designsystem.component.MedallionPortrait
 import com.samdori93.yeoksadam.core.designsystem.theme.DancheongColors
 import com.samdori93.yeoksadam.core.designsystem.theme.NanumMyeongjo
@@ -166,6 +167,7 @@ fun MapScreen(
                     state = rememberMarkerState(key = "s:${ns.site.id}", position = LatLng(ns.site.lat, ns.site.lng)),
                     width = 18.dp,
                     height = 24.dp,
+                    icon = MarkerIcons.BLACK,
                     iconTintColor = if (ns.site.local) DancheongColors.Cheongnok else DancheongColors.MeokSoft,
                     captionText = ns.site.name,
                     captionTextSize = 11.sp,
@@ -181,6 +183,7 @@ fun MapScreen(
             state.figures.forEach { nf ->
                 Marker(
                     state = rememberMarkerState(key = "f:${nf.figure.id}", position = LatLng(nf.site.lat, nf.site.lng)),
+                    icon = MarkerIcons.BLACK,
                     iconTintColor = DancheongColors.Jujak,
                     captionText = nf.figure.name,
                     subCaptionText = nf.site.name,

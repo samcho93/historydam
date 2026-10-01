@@ -22,6 +22,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
@@ -129,7 +130,7 @@ fun ArScreen(
         }
 
         // 상단: 홈 · 타깃 칩 · 반경
-        Column(Modifier.statusBarsPadding().padding(12.dp).fillMaxWidth()) {
+        Column(Modifier.zIndex(5000f).statusBarsPadding().padding(12.dp).fillMaxWidth()) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Box(Modifier.size(42.dp).background(Color.Black.copy(alpha = 0.4f), CircleShape).clickable(onClick = onBack), contentAlignment = Alignment.Center) {
                     Icon(Icons.Filled.Home, "홈", tint = Color.White, modifier = Modifier.size(22.dp))
@@ -188,7 +189,7 @@ fun ArScreen(
             val dist = GeoMath.distanceMeters(here.lat, here.lng, target.lat, target.lng)
             val delta = angleDiff(orientation.heading, GeoMath.bearingDegrees(here.lat, here.lng, target.lat, target.lng))
             Column(
-                Modifier.align(Alignment.Center).padding(top = 160.dp),
+                Modifier.zIndex(4000f).align(Alignment.Center).padding(top = 160.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 Box(Modifier.size(64.dp).background(DancheongColors.Jujak.copy(alpha = 0.85f), CircleShape), contentAlignment = Alignment.Center) {
@@ -209,7 +210,7 @@ fun ArScreen(
 
         // 하단 HUD: ◀ 왼쪽 밖 수 · 방위 · 오른쪽 밖 수 ▶
         Row(
-            Modifier.align(Alignment.BottomCenter).navigationBarsPadding().padding(16.dp).fillMaxWidth(),
+            Modifier.zIndex(5000f).align(Alignment.BottomCenter).navigationBarsPadding().padding(16.dp).fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
         ) {
@@ -285,7 +286,7 @@ private fun ArLabel(l: PlacedLabel, onClick: () -> Unit) {
             Text(
                 "+${l.hidden.size}",
                 color = DancheongColors.HwangtoLight, fontSize = 11.sp, fontWeight = FontWeight.Bold,
-                modifier = Modifier.align(Alignment.TopEnd).padding(top = 0.dp).background(DancheongColors.Meok, CircleShape).padding(horizontal = 6.dp, vertical = 2.dp),
+                modifier = Modifier.align(Alignment.TopEnd).offset(x = 10.dp, y = (-10).dp).background(DancheongColors.Meok, CircleShape).padding(horizontal = 6.dp, vertical = 2.dp),
             )
         }
     }
@@ -314,7 +315,7 @@ private fun SiteSheet(state: ArUiState, opened: NearbySite, onGuide: () -> Unit,
             ) {
                 MedallionPortrait(portraitUrl = f.portraitUrl.ifBlank { null }, name = f.name, sealMark = f.seal.ifBlank { null }, size = 40.dp)
                 Spacer(Modifier.width(10.dp))
-                Text("${f.name}과(와) 대화", fontFamily = NanumMyeongjo, fontWeight = FontWeight.Bold, fontSize = 15.sp, color = DancheongColors.Meok)
+                Text("${f.name}${withWa(f.name)} 대화", fontFamily = NanumMyeongjo, fontWeight = FontWeight.Bold, fontSize = 15.sp, color = DancheongColors.Meok)
             }
         }
         Text(
@@ -360,6 +361,12 @@ private fun kindOf(n: NearbySite): String = when {
     n.site.local -> "향토유산"
     n.site.tour -> "역사관광지"
     else -> n.site.designation.ifBlank { "유적" }
+}
+
+/** 받침에 맞는 「과/와」 */
+private fun withWa(word: String): String {
+    val last = word.lastOrNull { it in '가'..'힣' } ?: return "와"
+    return if ((last - '가') % 28 != 0) "과" else "와"
 }
 
 private fun formatDistance(m: Float): String = if (m >= 1000) "%.1fkm".format(m / 1000) else "${m.roundToInt()}m"

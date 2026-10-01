@@ -14,6 +14,10 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
@@ -170,6 +174,8 @@ fun VoiceScreen(
                 .fillMaxWidth()
                 .background(Brush.verticalGradient(listOf(Color.Transparent, Color.Black.copy(alpha = 0.6f))))
                 .navigationBarsPadding()
+                // 글 입력 키보드가 올라오면 자막·입력창을 키보드 위로
+                .imePadding()
                 .padding(horizontal = 16.dp, vertical = 12.dp),
         ) {
             Captions(state, figure?.name ?: "")
@@ -191,6 +197,8 @@ fun VoiceScreen(
                 textAlign = TextAlign.Center,
             )
             if (typing) {
+                val focus = remember { FocusRequester() }
+                LaunchedEffect(Unit) { focus.requestFocus() }
                 Row(
                     modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
                         .background(Color.White.copy(alpha = 0.92f), RoundedCornerShape(24.dp)).padding(start = 16.dp),
@@ -203,7 +211,7 @@ fun VoiceScreen(
                         textStyle = TextStyle(fontSize = 15.sp, color = DancheongColors.Meok),
                         keyboardOptions = KeyboardOptions(imeAction = ImeAction.Send),
                         keyboardActions = KeyboardActions(onSend = { onType(draft); draft = "" }),
-                        modifier = Modifier.weight(1f),
+                        modifier = Modifier.weight(1f).focusRequester(focus),
                         decorationBox = { inner ->
                             if (draft.isEmpty()) Text("말 대신 글로 여쭈어 보세요…", color = DancheongColors.MeokSoft, fontSize = 15.sp)
                             inner()

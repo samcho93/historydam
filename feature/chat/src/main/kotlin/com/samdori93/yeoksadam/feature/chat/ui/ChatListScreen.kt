@@ -111,7 +111,7 @@ fun ChatListScreen(
                     MedallionPortrait(
                         portraitUrl = nf.figure.portraitUrl.ifBlank { null },
                         name = nf.figure.name,
-                        sealMark = nf.figure.seal.ifBlank { null },
+                        sealMark = null,
                         size = 48.dp,
                     )
                     Spacer(Modifier.width(14.dp))

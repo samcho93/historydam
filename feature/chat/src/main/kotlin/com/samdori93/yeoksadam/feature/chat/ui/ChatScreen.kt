@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -187,7 +188,7 @@ fun ChatScreen(
                     onValueChange = onInputChange,
                     modifier = Modifier
                         .weight(1f)
-                        .height(48.dp),
+                        .heightIn(min = 54.dp),
                     placeholder = { Text("메시지를 입력하세요…", color = DancheongColors.MeokSoft, fontSize = 14.sp) },
                     singleLine = true,
                     textStyle = LocalTextStyle.current.copy(fontSize = 14.sp, color = DancheongColors.Meok),
