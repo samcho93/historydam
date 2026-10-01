@@ -262,6 +262,18 @@ fun MapScreen(
             }
         }
 
+        // 주변 유적 AR 탐색 (카메라로 비추면 반경 안 유적이 라벨로)
+        Column(
+            Modifier.align(Alignment.CenterEnd).padding(end = 12.dp)
+                .background(DancheongColors.Jujak, RoundedCornerShape(16.dp))
+                .clickable { onEnterAr("", "") }
+                .padding(horizontal = 12.dp, vertical = 10.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            Text("AR", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 15.sp)
+            Text("주변 탐색", color = Color.White, fontSize = 10.sp)
+        }
+
         // 하단 카드
         Box(Modifier.align(Alignment.BottomCenter).padding(16.dp)) {
             when (val sel = state.selection) {

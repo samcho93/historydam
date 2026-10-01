@@ -91,7 +91,8 @@ fun YeoksadamAppRoot(
                 onStartConversation = { navController.navigateToVoice(it) },
             )
             arScreen(
-                onStartConversation = { navController.navigateToChat(it) },
+                onStartConversation = { navController.navigateToVoice(it) },
+                onBack = { navController.popBackStack() },
             )
             cameraScreen(
                 onBack = { navController.navigateToHome() },
