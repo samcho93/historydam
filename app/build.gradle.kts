@@ -25,8 +25,21 @@ android {
 
     buildTypes {
         release {
-            isMinifyEnabled = false
+            // 배포용: 코드·리소스 축소. 스토어 등록 전까지는 디버그 키로 서명해 직접 설치(사이드로드)한다.
+            isMinifyEnabled = true
+            isShrinkResources = true
+            signingConfig = signingConfigs.getByName("debug")
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+        }
+    }
+
+    // CPU 별 APK (네이버 지도 엔진이 CPU 마다 약 25MB) — 폰은 arm64-v8a, 에뮬레이터는 x86_64
+    splits {
+        abi {
+            isEnable = true
+            reset()
+            include("arm64-v8a", "armeabi-v7a", "x86_64")
+            isUniversalApk = false
         }
     }
 }
